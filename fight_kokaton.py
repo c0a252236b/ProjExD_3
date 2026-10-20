@@ -156,7 +156,7 @@ class Bomb:
         pg.draw.circle(self.img, color, (rad, rad), rad)
         self.img.set_colorkey((0, 0, 0))
         self.rct = self.img.get_rect()
-        self.img_r = int(self.rct.width / 2)
+        self.img_r = int(self.rct.width / 2) # 爆弾の半径
         self.rct.center = random.randint(self.img_r, WIDTH - self.img_r), random.randint(self.img_r, HEIGHT - self.img_r)
         self.vx, self.vy = +5, +5
 
