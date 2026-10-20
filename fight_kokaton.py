@@ -247,8 +247,7 @@ def main():
             if bomb is not None:
                 bomb.update(screen)
         for exp in explosions:
-            if exp is not None:
-                exp.update(screen)
+            exp.update(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
