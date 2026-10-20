@@ -219,10 +219,7 @@ def main():
     explosions = []
     clock = pg.time.Clock()
     tmr = 0
-    while True:
-
-        bombs = [bomb for bomb in bombs if bomb is not None]
-        
+    while True:        
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
@@ -245,18 +242,18 @@ def main():
 
             # 爆弾とビームの衝突判定
             for beam in beams:
-                print(f"s{beams}")
                 if(bomb is not None) and (beam is not None):
                     if beam.rct.colliderect(bomb.rct):
-                        explosions.append(Explosion(bomb))
-                        score.score += 1
-                        bird.change_img(9,screen)
-                        bombs[bombs.index(bomb)] = None
+                        if(bomb in bombs):
+                            explosions.append(Explosion(bomb))
+                            score.score += 1
+                            bird.change_img(9,screen)
+                            bombs[bombs.index(bomb)] = None
+                        bombs = [bomb for bomb in bombs if bomb is not None]
                         beams[beams.index(beam)] = None
                 if (beam is not None) and (check_bound(beam.rct) != (True,True)):
                     beams[beams.index(beam)] = None
                 beams = [beam for beam in beams if beam is not None]
-                print(f"a{beams}")
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
