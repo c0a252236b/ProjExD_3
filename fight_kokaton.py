@@ -1,3 +1,4 @@
+import math
 import os
 import random
 import sys
@@ -56,6 +57,7 @@ class Bird:
         self.img = __class__.imgs[(+5, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
+        self.dire = (+5,0)
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -73,11 +75,14 @@ class Bird:
         引数2 screen：画面Surface
         """
         sum_mv = [0, 0]
+        
         for k, mv in __class__.delta.items():
             if key_lst[k]:
                 sum_mv[0] += mv[0]
                 sum_mv[1] += mv[1]
         self.rct.move_ip(sum_mv)
+        if sum_mv != [0,0]:
+            self.dire = tuple(sum_mv)
         if check_bound(self.rct) != (True, True):
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
@@ -94,11 +99,15 @@ class Beam:
             引数 bird：ビームを放つこうかとん（Birdインスタンス）
             """
             self.img = pg.image.load(f"fig/beam.png")
-            self.rct = self.img.get_rect()
-            self.rct.center = bird.rct.center
-            self.rct.left = bird.rct.right
-            self.vx, self.vy = +5, 0
-    
+            self.vx, self.vy = bird.dire
+            angle = math.degrees(math.atan2(-self.vy,self.vx))
+            self.rotated_img = pg.transform.rotozoom(self.img,angle,1)
+            self.rct = self.rotated_img.get_rect()
+            # self.rct.center = bird.rct.center
+            # self.rct.left = bird.rct.right
+            self.rct.centerx = bird.rct.centerx + bird.rct.width * (self.vx / 5)
+            self.rct.centery = bird.rct.centery + bird.rct.height * (self.vy / 5)
+
     def update(self, screen: pg.Surface):
         """
         ビームを速度ベクトルself.vx, self.vyに基づき移動させる
@@ -106,7 +115,7 @@ class Beam:
         """
         if check_bound(self.rct) == (True, True):
             self.rct.move_ip(self.vx, self.vy)
-            screen.blit(self.img, self.rct)
+            screen.blit(self.rotated_img, self.rct)
 
 # ビームクラス:
     # """
@@ -234,20 +243,23 @@ def main():
                     time.sleep(1)
                     return
 
-                # 爆弾とビームの衝突判定
-                for beam in beams:
-                    if(bomb is not None) and (beam is not None):
-                        if beam.rct.colliderect(bomb.rct):
-                            bombs[bombs.index(bomb)] = None
-                            explosions.append(Explosion(bomb))
-                            score.score += 1
-                            bird.change_img(9,screen)
-                    if check_bound(beam.rct) != (True,True):
-                        beam = None
+            # 爆弾とビームの衝突判定
+            for beam in beams:
+                print(f"s{beams}")
+                if(bomb is not None) and (beam is not None):
+                    if beam.rct.colliderect(bomb.rct):
+                        explosions.append(Explosion(bomb))
+                        score.score += 1
+                        bird.change_img(9,screen)
+                        bombs[bombs.index(bomb)] = None
+                        beams[beams.index(beam)] = None
+                if (beam is not None) and (check_bound(beam.rct) != (True,True)):
+                    beams[beams.index(beam)] = None
+                beams = [beam for beam in beams if beam is not None]
+                print(f"a{beams}")
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        beams = [beam for beam in beams if beam is not None]
         explosions = [explosion for explosion in explosions if explosion is not None]
         for beam in beams:
             if beam is not None:
@@ -262,6 +274,7 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+        
 
 if __name__ == "__main__":
     pg.init()
