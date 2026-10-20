@@ -89,6 +89,7 @@ class Bird:
             self.img = __class__.imgs[tuple(sum_mv)]
         screen.blit(self.img, self.rct)
 
+
 class Beam:
     """
     こうかとんが放つビームに関するクラス
@@ -117,30 +118,6 @@ class Beam:
             self.rct.move_ip(self.vx, self.vy)
             screen.blit(self.rotated_img, self.rct)
 
-# ビームクラス:
-    # """
-    # こうかとんが放つビームに関するクラス
-    # """
-    # def イニシャライザ(self, bird:"Bird"):
-    #     """
-    #     ビーム画像Surfaceを生成する
-    #     引数 bird：ビームを放つこうかとん（Birdインスタンス）
-    #     """
-    #     self.img = pg.画像のロード(f"fig/beam.png")
-    #     self.rct = self.img.Rectの取得()
-    #     self.ビームの中心縦座標 = こうかとんの中心縦座標
-    #     self.ビームの左座標 = こうかとんの右座標
-    #     self.vx, self.vy = +5, 0
-
-    # def update(self, screen: pg.Surface):
-    #     """
-    #     ビームを速度ベクトルself.vx, self.vyに基づき移動させる
-    #     引数 screen：画面Surface
-    #     """
-    #     if check_bound(self.rct) == (True, True):
-    #         self.rct.move_ip(self.vx, self.vy)
-    #         screen.blit(self.img, self.rct)    
-
 
 class Bomb:
     """
@@ -157,6 +134,7 @@ class Bomb:
         self.img.set_colorkey((0, 0, 0))
         self.rct = self.img.get_rect()
         self.img_r = int(self.rct.width / 2) # 爆弾の半径
+        # 爆弾の最初の生成可能範囲を爆弾の半径分縮小
         self.rct.center = random.randint(self.img_r, WIDTH - self.img_r), random.randint(self.img_r, HEIGHT - self.img_r)
         self.vx, self.vy = +5, +5
 
@@ -181,15 +159,18 @@ class Score:
     def __init__(self):
         self.score = 0
         self.fonto = pg.font.Font(None, 50)
-        self.img = self.fonto.render(f"Score:{self.score}", 0, (0,0,255))
+        self.img = self.fonto.render(f"Score:0", 0, (0,0,255))
         self.rct = self.img.get_rect()
-        self.rct.center = 100,50
+        self.rct.center = 100,HEIGHT-50
     def update(self,screen: pg.Surface):
         self.img = self.fonto.render(f"Score:{self.score}", 0, (0,0,255))
         screen.blit(self.img,self.rct)
 
 
 class Explosion:
+    """
+    爆発エフェクトクラス
+    """
     def __init__(self,bomb:Bomb):
         self.img = pg.image.load("fig/explosion.gif")
         self.img_flip = pg.transform.flip(self.img,True,True)
@@ -204,7 +185,6 @@ class Explosion:
             self.life_time -= 1
         if (self.life > 0):
             screen.blit(self.explsn_lst[self.life_time%2 - 1],self.rct)
-
 
 
 def main():
@@ -243,17 +223,18 @@ def main():
 
             # 爆弾とビームの衝突判定
             for beam in beams:
-                if(bomb is not None) and (beam is not None):
-                    if beam.rct.colliderect(bomb.rct):
-                        if(bomb in bombs):
-                            explosions.append(Explosion(bomb))
-                            score.score += 1
-                            bird.change_img(9,screen)
-                            bombs[bombs.index(bomb)] = None
-                        bombs = [bomb for bomb in bombs if bomb is not None]
+                if bomb is not None:
+                    if beam is not None:
+                        if beam.rct.colliderect(bomb.rct):
+                            if(bomb in bombs):
+                                explosions.append(Explosion(bomb))
+                                score.score += 1
+                                bird.change_img(9,screen)
+                                bombs[bombs.index(bomb)] = None
+                            bombs = [bomb for bomb in bombs if bomb is not None]
+                            beams[beams.index(beam)] = None
+                    if check_bound(beam.rct) != (True,True):
                         beams[beams.index(beam)] = None
-                if (beam is not None) and (check_bound(beam.rct) != (True,True)):
-                    beams[beams.index(beam)] = None
                 beams = [beam for beam in beams if beam is not None]
 
         key_lst = pg.key.get_pressed()
